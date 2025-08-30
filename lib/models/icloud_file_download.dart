@@ -11,8 +11,8 @@ class CloudFiles {
   String title;
   String filePath;
   DateTime? fileDate;
-  bool hasUploaded;
-  int sizeInBytes;
+  bool hasUploaded = false;
+  int sizeInBytes = 0;
   DateTime? lastSyncDt;
 
   /// Relative path of the file in iCloud
@@ -27,23 +27,17 @@ class CloudFiles {
     this.sizeInBytes,
     this.lastSyncDt, {
     this.relativePath,
-    this.hasUploaded = false,
   });
 
   /// Factory constructor to create a CloudFiles object from JSON
   factory CloudFiles.fromJson(Map<String, dynamic> json) => CloudFiles(
-    json['id'] as int?,
-    json['title'] as String? ?? '',
-    json['filePath'] as String? ?? '',
-    json['fileDate'] != null && json['fileDate'].toString().isNotEmpty
-        ? DateTime.tryParse(json['fileDate'].toString())
-        : null,
-    (json['sizeInBytes'] as num?)?.toInt() ?? 0,
-    json['lastSyncDt'] != null && json['lastSyncDt'].toString().isNotEmpty
-        ? DateTime.tryParse(json['lastSyncDt'].toString())
-        : null,
-    relativePath: json['relativePath'] as String?,
-    hasUploaded: (json['hasUploaded'] as bool?) ?? false,
+    json['id'],
+    json['title'],
+    json['filePath'],
+    DateTime.parse(json['fileDate'].toString()),
+    json['sizeInBytes'],
+    DateTime.parse(json['lastSyncDt'].toString()),
+    relativePath: json['relativePath'],
   );
 
   /// Converts the CloudFiles object to a Map
@@ -52,21 +46,17 @@ class CloudFiles {
       'id': id,
       'title': title,
       'filePath': filePath,
-      'fileDate': fileDate?.toIso8601String(),
+      'fileDate': fileDate?.toString(),
       'sizeInBytes': sizeInBytes,
-      'lastSyncDt': lastSyncDt?.toIso8601String(),
+      'lastSyncDt': lastSyncDt?.toString(),
       'relativePath': relativePath,
-      'hasUploaded': hasUploaded,
     };
   }
 
   /// Overrides the toString method for debugging purposes
   @override
   String toString() {
-    return '{id: $id, Title: $title, FilePath: $filePath, '
-        'FileDate: $fileDate, sizeInBytes: $sizeInBytes, '
-        'LastSyncDt: $lastSyncDt, relativePath: $relativePath, '
-        'hasUploaded: $hasUploaded}';
+    return '{id: $id, Title:$title, FilePath:$filePath, FileDate: $fileDate}, sizeInBytes: $sizeInBytes, LastSyncDt: $lastSyncDt, relativePath: $relativePath}';
   }
 }
 

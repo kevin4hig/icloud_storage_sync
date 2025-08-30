@@ -1,47 +1,35 @@
 class ICloudFile {
-  /// File path relative to the iCloud container
   final String relativePath;
-
-  /// Corresponding to NSMetadataItemFSSizeKey
   final int sizeInBytes;
-
-  /// Corresponding to NSMetadataItemFSCreationDateKey
   final DateTime creationDate;
-
-  /// Corresponding to NSMetadataItemFSContentChangeDateKey
   final DateTime contentChangeDate;
-
-  /// Corresponding to NSMetadataUbiquitousItemIsDownloadingKey
   final bool isDownloading;
-
-  /// Corresponding to NSMetadataUbiquitousItemDownloadingStatusKey
   final DownloadStatus downloadStatus;
-
-  /// Corresponding to NSMetadataUbiquitousItemIsUploadingKey
   final bool isUploading;
-
-  /// Corresponding to NSMetadataUbiquitousItemIsUploadedKey
   final bool isUploaded;
-
-  /// Corresponding to NSMetadataUbiquitousItemHasUnresolvedConflictsKey
   final bool hasUnresolvedConflicts;
 
-  /// Constructor to create the object from the map passed from platform code
   ICloudFile.fromMap(Map<dynamic, dynamic> map)
-      : relativePath = map['relativePath'] as String,
-        sizeInBytes = map['sizeInBytes'],
-        creationDate = DateTime.fromMillisecondsSinceEpoch(
-            ((map['creationDate'] as double) * 1000).round()),
-        contentChangeDate = DateTime.fromMillisecondsSinceEpoch(
-            ((map['contentChangeDate'] as double) * 1000).round()),
-        isDownloading = map['isDownloading'],
-        downloadStatus = _mapToDownloadStatusFromNSKeys(map['downloadStatus']),
-        isUploading = map['isUploading'],
-        isUploaded = map['isUploaded'],
-        hasUnresolvedConflicts = map['hasUnresolvedConflicts'];
+    : relativePath = (map['relativePath'] as String?) ?? '',
+      sizeInBytes = (map['sizeInBytes'] as num?)?.toInt() ?? 0,
+      creationDate = _toDateFromSecondsEpoch(map['creationDate']),
+      contentChangeDate = _toDateFromSecondsEpoch(map['contentChangeDate']),
+      isDownloading = (map['isDownloading'] as bool?) ?? false,
+      downloadStatus = _mapToDownloadStatusFromNSKeys(
+        map['downloadStatus'] as String?,
+      ),
+      isUploading = (map['isUploading'] as bool?) ?? false,
+      isUploaded = (map['isUploaded'] as bool?) ?? false,
+      hasUnresolvedConflicts =
+          (map['hasUnresolvedConflicts'] as bool?) ?? false;
 
-  /// Map native download status keys to DownloadStatus enum
-  static DownloadStatus _mapToDownloadStatusFromNSKeys(String key) {
+  static DateTime _toDateFromSecondsEpoch(dynamic v) {
+    // iCloud suele dar segundos (double), pero a veces puede llegar int/double/null
+    final seconds = (v is num) ? v.toDouble() : 0.0;
+    return DateTime.fromMillisecondsSinceEpoch((seconds * 1000).round());
+  }
+
+  static DownloadStatus _mapToDownloadStatusFromNSKeys(String? key) {
     switch (key) {
       case 'NSMetadataUbiquitousItemDownloadingStatusNotDownloaded':
         return DownloadStatus.notDownloaded;
@@ -50,7 +38,8 @@ class ICloudFile {
       case 'NSMetadataUbiquitousItemDownloadingStatusCurrent':
         return DownloadStatus.current;
       default:
-        throw 'NSMetadataUbiquitousItemDownloadingStatusKey is not handled';
+        // Si viene null o un valor nuevo de Apple, evita lanzar y usa algo sensato
+        return DownloadStatus.current;
     }
   }
 }

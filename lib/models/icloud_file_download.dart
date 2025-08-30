@@ -11,28 +11,40 @@ class CloudFiles {
   String title;
   String filePath;
   DateTime? fileDate;
-  bool hasUploaded = false;
-  int sizeInBytes = 0;
+  bool hasUploaded;
+  int sizeInBytes;
   DateTime? lastSyncDt;
 
   /// Relative path of the file in iCloud
   String? relativePath;
 
   /// Constructor for CloudFiles
-  CloudFiles(this.id, this.title, this.filePath, this.fileDate,
-      this.sizeInBytes, this.lastSyncDt,
-      {this.relativePath});
+  CloudFiles(
+    this.id,
+    this.title,
+    this.filePath,
+    this.fileDate,
+    this.sizeInBytes,
+    this.lastSyncDt, {
+    this.relativePath,
+    this.hasUploaded = false,
+  });
 
   /// Factory constructor to create a CloudFiles object from JSON
   factory CloudFiles.fromJson(Map<String, dynamic> json) => CloudFiles(
-        json['id'],
-        json['title'],
-        json['filePath'],
-        DateTime.parse(json['fileDate'].toString()),
-        json['sizeInBytes'],
-        DateTime.parse(json['lastSyncDt'].toString()),
-        relativePath: json['relativePath'],
-      );
+    json['id'] as int?,
+    json['title'] as String? ?? '',
+    json['filePath'] as String? ?? '',
+    json['fileDate'] != null && json['fileDate'].toString().isNotEmpty
+        ? DateTime.tryParse(json['fileDate'].toString())
+        : null,
+    (json['sizeInBytes'] as num?)?.toInt() ?? 0,
+    json['lastSyncDt'] != null && json['lastSyncDt'].toString().isNotEmpty
+        ? DateTime.tryParse(json['lastSyncDt'].toString())
+        : null,
+    relativePath: json['relativePath'] as String?,
+    hasUploaded: (json['hasUploaded'] as bool?) ?? false,
+  );
 
   /// Converts the CloudFiles object to a Map
   Map<String, dynamic> toMap() {
@@ -40,17 +52,21 @@ class CloudFiles {
       'id': id,
       'title': title,
       'filePath': filePath,
-      'fileDate': fileDate?.toString(),
+      'fileDate': fileDate?.toIso8601String(),
       'sizeInBytes': sizeInBytes,
-      'lastSyncDt': lastSyncDt?.toString(),
-      'relativePath': relativePath
+      'lastSyncDt': lastSyncDt?.toIso8601String(),
+      'relativePath': relativePath,
+      'hasUploaded': hasUploaded,
     };
   }
 
   /// Overrides the toString method for debugging purposes
   @override
   String toString() {
-    return '{id: $id, Title:$title, FilePath:$filePath, FileDate: $fileDate}, sizeInBytes: $sizeInBytes, LastSyncDt: $lastSyncDt, relativePath: $relativePath}';
+    return '{id: $id, Title: $title, FilePath: $filePath, '
+        'FileDate: $fileDate, sizeInBytes: $sizeInBytes, '
+        'LastSyncDt: $lastSyncDt, relativePath: $relativePath, '
+        'hasUploaded: $hasUploaded}';
   }
 }
 
@@ -66,10 +82,16 @@ extension ListICloudFileConvert on List<ICloudFile> {
   }
 
   /// Converts a single ICloudFile to a CloudFiles object
-  Future<CloudFiles> _iCloudFileTofile(ICloudFile file, String containerId,
-      [List<String> path = const []]) async {
-    int index = path.indexWhere((e) => e.contains(
-        Uri.decodeComponent(file.relativePath.replaceAll('%20', ' '))));
+  Future<CloudFiles> _iCloudFileTofile(
+    ICloudFile file,
+    String containerId, [
+    List<String> path = const [],
+  ]) async {
+    int index = path.indexWhere(
+      (e) => e.contains(
+        Uri.decodeComponent(file.relativePath.replaceAll('%20', ' ')),
+      ),
+    );
     String? newFilePath;
     String newPath = await _getDownloadPath(file.relativePath);
 
@@ -85,14 +107,24 @@ extension ListICloudFileConvert on List<ICloudFile> {
         containerId,
       );
     }
-    String fileName =
-        (file.relativePath.split("/").last.toString().split(".").first)
-            .replaceAll('%20', ' ');
+    String fileName = (file.relativePath
+            .split("/")
+            .last
+            .toString()
+            .split(".")
+            .first)
+        .replaceAll('%20', ' ');
 
     await logFileSize(newFilePath ?? file.relativePath);
-    return CloudFiles(file.hashCode, fileName, newFilePath ?? file.relativePath,
-        file.creationDate, file.sizeInBytes, file.contentChangeDate,
-        relativePath: file.relativePath);
+    return CloudFiles(
+      file.hashCode,
+      fileName,
+      newFilePath ?? file.relativePath,
+      file.creationDate,
+      file.sizeInBytes,
+      file.contentChangeDate,
+      relativePath: file.relativePath,
+    );
   }
 
   /// Gets the download path for a file
@@ -103,13 +135,17 @@ extension ListICloudFileConvert on List<ICloudFile> {
 
   /// Downloads a file from iCloud
   Future<String?> downloadFileFromICloud(
-      String relativePath, String newPath, String containerId) async {
+    String relativePath,
+    String newPath,
+    String containerId,
+  ) async {
     try {
       await IcloudStorageSync().download(
-          containerId: containerId,
-          relativePath: Uri.decodeFull(relativePath).replaceAll('%20', ' '),
-          destinationFilePath: Uri.decodeFull(newPath).replaceAll('%20', ' '),
-          onProgress: (progress) async {});
+        containerId: containerId,
+        relativePath: Uri.decodeFull(relativePath).replaceAll('%20', ' '),
+        destinationFilePath: Uri.decodeFull(newPath).replaceAll('%20', ' '),
+        onProgress: (progress) async {},
+      );
       return Uri.decodeFull(newPath).replaceAll('%20', ' ');
     } catch (e) {
       debugPrint('Error while downloading file from iCloud: ${e.toString()}');

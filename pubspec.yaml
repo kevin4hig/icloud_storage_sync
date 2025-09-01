@@ -6,15 +6,15 @@ issue_tracker: https://github.com/DevCodeSpace/icloud_storage_sync/issues
 documentation: https://pub.dev/documentation/icloud_storage_sync/latest/
 
 environment:
-  sdk: '>=3.4.4 <4.0.0'
-  flutter: '>=3.3.0'
+  sdk: ">=3.4.4 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
   path_provider: ^2.1.4
-  intl: ^0.19.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -22,7 +22,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
 
 screenshots:
-  - description: 'The iCloud storage sync Flutter plugin integrates iCloud, enabling secure backup and sync of data across devices.'
+  - description: "The iCloud storage sync Flutter plugin integrates iCloud, enabling secure backup and sync of data across devices."
     path: screenshots/screenshot1.jpg
 
 # For information on the generic Dart part of this file, see the
